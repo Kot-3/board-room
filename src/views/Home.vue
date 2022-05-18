@@ -8,7 +8,7 @@
         <div class="border-gray-400 h-full border border-solid leading-8 sm:rounded-lg text-xs">
           <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
             <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
-              <template v-for="item in fileList.reverse()" :key="item">
+              <template v-for="item in fileList" :key="item">
                 <li class="w-16 mx-2">
                   <icons class="m-auto" :type="filterIconStr(item.url)"></icons>
                   <a
@@ -34,7 +34,7 @@
                   class="break-all flex-1"
                   v-html="item.msg"
                 ></span>
-                <img v-else :src="'assets/' + item.url" class="break-all flex-1" />
+                <img v-else :src="'http://127.0.0.1:3001/' + item.url" class="break-all flex-1" />
               </li>
             </template>
           </ul>
@@ -128,6 +128,7 @@ export default {
       const formData = new FormData();
       formData.append("file", file);
       fileUpload(formData).then((res) => {
+        console.log(res);
         let type = res.data.data?.mimetype?.indexOf("image") > -1 ? "image" : "file";
         let name = type == "image" ? userNames : res.data.data.filename;
         let params = {
@@ -164,17 +165,17 @@ export default {
     }
     onMounted(async () => {
       await recordRoom(route.params.room);
-      getRecordList(route.params.room).then(async (res) => {
+      getRecordList(route.params.room).then((res) => {
         dataList.data = res.data.reverse();
         res.data.forEach((item) => {
           if (item.type == "file") {
             fileList.push(item);
           }
         });
-        await nextTick();
-        setTimeout(() => {
-          contentText.value.scrollTo(0, contentText.value.scrollHeight);
-        }, 100);
+
+        // setTimeout(() => {
+        //   contentText.value.scrollTo(0, contentText.value.scrollHeight);
+        // }, 100);
       });
     });
 

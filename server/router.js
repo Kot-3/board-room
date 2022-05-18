@@ -2,10 +2,11 @@ const db = require('./db')
 const express = require('express')
 const router = express.Router()
 const multer = require('multer');
+const path = require('path')
 const storage = multer.diskStorage({
     // 上传文件的目录
     destination: function (req, file, cb) {
-        cb(null, 'assets')
+        cb(null, path.join(__dirname, '../file'))
     },
     // 上传文件的名称
     filename: function (req, file, cb) {
@@ -30,7 +31,8 @@ router.get('/getRecord/:room', async (req, res) => {
 })
 router.post('/file_upload', upload.single('file'), (req, res) => {
     res.send({
-        data: req.file
+        data: req.file,
+        file: path.join(__dirname, '../file')
     })
 })
 
