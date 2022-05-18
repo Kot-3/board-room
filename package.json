@@ -1,0 +1,41 @@
+{
+  "name": "vite-vue3-tailwind-starter",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "serve": "vite preview",
+    "serve2": "nodemon ./server/index.js",
+    "start": "concurrently \"npm run dev\" \"npm run serve2\""
+  },
+  "dependencies": {
+    "@wangeditor/editor": "^5.0.1",
+    "@wangeditor/editor-for-vue": "^5.1.11",
+    "axios": "^0.27.2",
+    "concurrently": "^7.2.0",
+    "config-yml": "^0.10.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "multer": "^1.4.4",
+    "socket.io": "^4.5.0",
+    "socket.io-client": "^4.5.0",
+    "sqlite3": "^5.0.8",
+    "vue": "^3.2.33",
+    "vue-router": "^4.0.15"
+  },
+  "devDependencies": {
+    "@headlessui/vue": "^1.6.1",
+    "@heroicons/vue": "^1.0.6",
+    "@tailwindcss/aspect-ratio": "^0.4.0",
+    "@tailwindcss/forms": "^0.5.1",
+    "@tailwindcss/line-clamp": "^0.4.0",
+    "@tailwindcss/typography": "^0.5.2",
+    "@types/tailwindcss": "^3.0.10",
+    "@vitejs/plugin-vue": "^2.3.2",
+    "autoprefixer": "^10.4.7",
+    "prettier-plugin-tailwindcss": "^0.1.10",
+    "tailwindcss": "^3.0.24",
+    "vite": "^2.9.8",
+    "vite-plugin-require-transform": "^1.0.3"
+  }
+}

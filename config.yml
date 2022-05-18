@@ -1,0 +1,7 @@
+url:
+  ip: 127.0.0.1
+
+app:
+  port: 3000
+serve:
+  port: 3001
