@@ -18,7 +18,7 @@ app.use(cors())
 app.use(express.static(path.join(__dirname, 'assets')))
 const io = new Server(httpServer, {
     cors: {
-        origin: `http://localhost:3000`
+        origin: `http://localhost:3000` // 前端端口
     }
 });
 console.log(path.join(__dirname, 'file'));
@@ -50,4 +50,4 @@ app.use('/room', roomRouter)
 
 
 
-httpServer.listen(3001);
+httpServer.listen(3001); //服务器端口
