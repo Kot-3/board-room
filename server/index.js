@@ -21,7 +21,6 @@ const io = new Server(httpServer, {
         origin: `http://localhost:3000` // 前端端口
     }
 });
-console.log(path.join(__dirname, 'file'));
 var startIo = ''
 var roomID = ''
 app.get('/room/recordroom', (req, res) => {
@@ -50,4 +49,4 @@ app.use('/room', roomRouter)
 
 
 
-httpServer.listen(3001); //服务器端口
+httpServer.listen(10001); //服务器端口

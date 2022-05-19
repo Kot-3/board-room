@@ -34,7 +34,7 @@
                   class="break-all flex-1"
                   v-html="item.msg"
                 ></span>
-                <img v-else :src="'http://127.0.0.1:3001/' + item.url" class="break-all flex-1" />
+                <img v-else :src="serveURl + item.url" class="break-all flex-1" />
               </li>
             </template>
           </ul>
@@ -83,7 +83,7 @@ import { userName } from "../assets/userName";
 export default {
   components: { Editor, icons },
   setup() {
-    const socket = io("http://localhost:3001");
+    const socket = io(serveURl);
     const contentText = ref(null);
     const userMessage = ref();
     let dataList = reactive({ data: [] });
@@ -172,9 +172,9 @@ export default {
             fileList.push(item);
           }
         });
-
+        contentText.value.scrollTo(0, contentText.value.scrollHeight);
         // setTimeout(() => {
-        //   contentText.value.scrollTo(0, contentText.value.scrollHeight);
+        //
         // }, 100);
       });
     });

@@ -11,7 +11,7 @@ import {
   createWebHistory
 } from 'vue-router'
 const app = createApp(App)
-
+const baseServeUrl = '127.0.0.1:10001'
 const router = createRouter({
   history: createWebHistory(),
   routes,
