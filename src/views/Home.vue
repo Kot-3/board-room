@@ -8,11 +8,11 @@
         <div class="border-gray-400 h-full border border-solid leading-8 sm:rounded-lg text-xs">
           <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
             <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
-              <template v-for="item in fileList" :key="item">
+              <template v-for="item in fileList" :key="item.name">
                 <li class="w-16 mx-2">
                   <icons class="m-auto" :type="filterIconStr(item.url)"></icons>
                   <a
-                    :href="'assets/' + item.url"
+                    :href="serveURL + '/' + item.url"
                     class="leading-8 truncate"
                     style="display: flow-root"
                     download
@@ -34,36 +34,36 @@
                   class="break-all flex-1"
                   v-html="item.msg"
                 ></span>
-                <img v-else :src="serveURl + item.url" class="break-all flex-1" />
+                <img v-else :src="serveURL + '/' + item.url" class="break-all flex-1" />
               </li>
             </template>
           </ul>
         </div>
       </div>
       <div class="footers sm:px-6 pt-2 flex">
-        <div class="bg-gray-300 p-1 rounded-md focus:border-blue-500 flex-auto mr-3">
+        <div class="bg-gray-300 p-1 rounded-md relative focus:border-blue-500 flex-auto mr-3">
           <Editor
             class="weditor"
-            style="height: 500px; overflow-y: hidden"
+            style="overflow-y: hidden"
             v-model="userMessage"
             :defaultConfig="editorConfig"
             :mode="mode"
             @onCreated="handleCreated"
           />
+          <span
+            class="p-2 text-3xl rounded-full mr-3 w-11 h-11 flex items-center justify-center absolute right-0 top-0"
+          >
+            <input
+              type="file"
+              name=""
+              id="myuplod"
+              @change="sendFile($event)"
+              class="opacity-0 w-11 h-11 absolute"
+            />
+            <icons type="shangchuan"></icons>
+          </span>
         </div>
-        <span
-          class="bg-gray-300 p-2 text-3xl rounded-full mr-3 w-11 h-11 flex items-center justify-center"
-        >
-          <input
-            type="file"
-            name=""
-            id="myuplod"
-            @change="sendFile($event)"
-            class="opacity-0 w-11 h-11 absolute"
-          />
-          <span>+</span>
-        </span>
-        <button class="bg-gray-300 rounded-xl p-2 w-20" @click="sendmsg">Send</button>
+        <button class="bg-gray-300 rounded-xl p-2 w-28 mr-2" @click="sendmsg">Send</button>
       </div>
     </div>
   </div>
@@ -91,6 +91,7 @@ export default {
     const userNameList = reactive(userName);
     const userNames = userNameList[Math.floor(Math.random() * 300)];
     const fileList = reactive([]);
+    const serveURL = serveURl;
     socket.on("message", function (msg) {
       let params = {
         room: msg.room,
@@ -166,16 +167,16 @@ export default {
     onMounted(async () => {
       await recordRoom(route.params.room);
       getRecordList(route.params.room).then((res) => {
-        dataList.data = res.data.reverse();
+        dataList.data = res.data;
         res.data.forEach((item) => {
           if (item.type == "file") {
             fileList.push(item);
           }
         });
-        contentText.value.scrollTo(0, contentText.value.scrollHeight);
-        // setTimeout(() => {
-        //
-        // }, 100);
+
+        setTimeout(() => {
+          contentText.value.scrollTo(0, contentText.value.scrollHeight);
+        }, 100);
       });
     });
 
@@ -209,6 +210,7 @@ export default {
       sendFile,
       filterIconStr,
       fileList,
+      serveURL,
     };
   },
 };
@@ -235,20 +237,7 @@ export default {
     height: calc(100% - 60px);
   }
 }
-/* 滚动槽 */
-::-webkit-scrollbar-track {
-  -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-}
-/* 滚动条滑块 */
-::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.1);
-  -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
-}
-::-webkit-scrollbar-thumb:window-inactive {
-  background: rgba(0, 0, 0, 0.1);
-}
+
 .weditor {
   height: 38px !important;
   line-height: 1;
@@ -257,8 +246,41 @@ export default {
 
 #w-e-textarea-1 p {
   margin: 0 !important;
+  padding-right: 20px;
 }
 a {
   color: #00a4ff;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 5px;
+}
+
+* {
+  scrollbar-width: 10px;
+  scrollbar-base-color: rgba(0, 0, 0, 0.3);
+  scrollbar-track-color: rgba(0, 0, 0, 0.3);
+  scrollbar-arrow-color: rgba(255, 255, 255, 0);
+}
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #b5d7e2;
+}
+
+*::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0);
 }
 </style>

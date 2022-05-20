@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require('cors');
 const path = require('path')
+
 const {
     createServer
 } = require("http");
@@ -11,19 +12,21 @@ const {
     setRecord
 } =
 require('./db')
-const roomRouter = require('./router')
 const app = express();
-const httpServer = createServer(app);
 app.use(cors())
+const roomRouter = require('./router')
+const httpServer = createServer(app);
+
 app.use(express.static(path.join(__dirname, 'assets')))
 const io = new Server(httpServer, {
     cors: {
-        origin: `http://localhost:3000` // 前端端口
+        origin: true // 前端端口
     }
 });
+
 var startIo = ''
 var roomID = ''
-app.get('/room/recordroom', (req, res) => {
+app.get('/room/recordroom', cors(), (req, res) => {
     roomID = req.query[0]
     if (startIo == '') {
         startIo = function () {

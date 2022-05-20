@@ -2,7 +2,7 @@ import axios from 'axios'
 const request = axios.create({
     withCredentials: true, // 当跨域请求时发送cookie
     timeout: 50000, // 请求超时时间
-    baseURL: '/room',
+    baseURL: `/room`,
 })
 export function recordRoom(id) {
     return request({

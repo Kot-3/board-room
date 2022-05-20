@@ -29,6 +29,8 @@ export default {
       "zip",
       "xml",
       "jia",
+      "shangchuan",
+      "jiazai",
     ];
     let newType = ref();
     onMounted(() => {

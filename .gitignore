@@ -5,6 +5,7 @@ dist-ssr
 *.local
 debug.log
 .idea
-# *.db
+*.db
 yarn-error.log
 package-lock.json
+server/assets
