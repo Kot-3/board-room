@@ -6,7 +6,8 @@
     "build": "vite build",
     "serve": "vite preview",
     "serve2": "nodemon ./server/index.js",
-    "start": "concurrently \"npm run dev\" \"npm run serve2\""
+    "start": "concurrently \"npm run dev\" \"npm run serve2\"",
+    "bs": "concurrently \"npm run build\" \"npm run serve\""
   },
   "dependencies": {
     "@wangeditor/editor": "^5.0.1",
@@ -33,6 +34,8 @@
     "@types/tailwindcss": "^3.0.10",
     "@vitejs/plugin-vue": "^2.3.2",
     "autoprefixer": "^10.4.7",
+    "postcss": "^8.4.14",
+    "postcss-100vh-fix": "^1.0.2",
     "prettier-plugin-tailwindcss": "^0.1.10",
     "tailwindcss": "^3.0.24",
     "vite": "^2.9.8",

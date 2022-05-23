@@ -1,44 +1,38 @@
 <template>
-  <div class="board w-full grid justify-items-center h-screen bg-slate-50">
+  <div class="board h-full w-full grid justify-items-center bg-slate-50">
     <div
-      class="h-screen w-screen overflow-hidden sm:w-10/12 sm:h-4/5 sm: md:w-7/12 bg-slate-50 sm:rounded-lg shadow-md"
+      class="w-screen h-full overflow-hidden sm:w-10/12 sm:h-4/5 sm: md:w-7/12 bg-slate-50 sm:rounded-lg shadow-md"
     >
       <div class="heards text-right pr-8 leading-8 hidden sm:block">{{ route.params.room }}</div>
-      <div class="content-box sm:px-6 relative">
-        <div class="border-gray-400 h-full border border-solid leading-8 sm:rounded-lg text-xs">
-          <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
-            <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
-              <template v-for="item in fileList" :key="item.name">
-                <li class="w-16 mx-2">
-                  <icons class="m-auto" :type="filterIconStr(item.url)"></icons>
-                  <a
-                    :href="serveURL + '/' + item.url"
-                    class="leading-8 truncate"
-                    style="display: flow-root"
-                    download
-                    >{{ item.name }}</a
-                  >
-                </li>
-              </template>
-            </ul>
-          </div>
-          <ul ref="contentText" class="content-text px-3 overflow-y-auto py-3">
-            <template v-for="item in dataList.data" :key="item.time">
-              <li v-if="item.type != 'file'">
-                <p>
-                  <span class="text-green-400 mr-2"> {{ item.time }}</span>
-                  <span class="text-red-400"> {{ item.name }}::</span>
-                </p>
-                <span
-                  v-if="item.type == 'message'"
-                  class="break-all flex-1"
-                  v-html="item.msg"
-                ></span>
-                <img v-else :src="serveURL + '/' + item.url" class="break-all flex-1" />
-              </li>
-            </template>
+      <div
+        class="border-gray-400 sm:mx-6 content-box re overflow-auto h-full border border-solid leading-8 sm:rounded-lg text-xs"
+      >
+        <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
+          <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
+            <li class="w-16 mx-2" v-for="item in fileList.data" :key="item.name">
+              <icons class="m-auto" :type="filterIconStr(item.url)"></icons>
+              <a
+                :href="serveURL + '/' + item.url"
+                class="leading-8 truncate text-center"
+                style="display: flow-root"
+                download
+                >{{ item.name }}</a
+              >
+            </li>
           </ul>
         </div>
+        <ul ref="contentText" class="content-text px-3 overflow-y-auto py-3">
+          <template v-for="item in dataList.data" :key="item.time">
+            <li v-if="item.type != 'file'">
+              <p>
+                <span class="text-green-400 mr-2"> {{ item.time }}</span>
+                <span class="text-red-400"> {{ item.name }}::</span>
+              </p>
+              <span v-if="item.type == 'message'" class="break-all flex-1" v-html="item.msg"></span>
+              <img v-else :src="serveURL + '/' + item.url" class="break-all flex-1" />
+            </li>
+          </template>
+        </ul>
       </div>
       <div class="footers sm:px-6 pt-2 flex">
         <div class="bg-gray-300 p-1 rounded-md relative focus:border-blue-500 flex-auto mr-3">
@@ -50,18 +44,22 @@
             :mode="mode"
             @onCreated="handleCreated"
           />
-          <span
-            class="p-2 text-3xl rounded-full mr-3 w-11 h-11 flex items-center justify-center absolute right-0 top-0"
-          >
-            <input
-              type="file"
-              name=""
-              id="myuplod"
-              @change="sendFile($event)"
-              class="opacity-0 w-11 h-11 absolute"
-            />
-            <icons type="shangchuan"></icons>
-          </span>
+          <div class="absolute right-0 top-0" style="width: 44px; height: 44px">
+            <span
+              class="p-2 text-3xl mr-3 flex items-center justify-center"
+              style="width: 44px; height: 44px"
+            >
+              <input
+                type="file"
+                name=""
+                id="myuplod"
+                @change="sendFile($event)"
+                class="opacity-0 absolute overflow-hidden"
+              />
+              <icons v-if="loadings" class="load" type="jiazai"></icons>
+              <icons v-else type="shangchuan"></icons>
+            </span>
+          </div>
         </div>
         <button class="bg-gray-300 rounded-xl p-2 w-28 mr-2" @click="sendmsg">Send</button>
       </div>
@@ -88,9 +86,10 @@ export default {
     const userMessage = ref();
     let dataList = reactive({ data: [] });
     const route = useRoute();
+    const loadings = ref(false);
     const userNameList = reactive(userName);
     const userNames = userNameList[Math.floor(Math.random() * 300)];
-    const fileList = reactive([]);
+    const fileList = reactive({ data: [] });
     const serveURL = serveURl;
     socket.on("message", function (msg) {
       let params = {
@@ -125,11 +124,11 @@ export default {
       }, 10);
     }
     function sendFile(event) {
+      loadings.value = true;
       let file = event.target.files[0];
       const formData = new FormData();
       formData.append("file", file);
       fileUpload(formData).then((res) => {
-        console.log(res);
         let type = res.data.data?.mimetype?.indexOf("image") > -1 ? "image" : "file";
         let name = type == "image" ? userNames : res.data.data.filename;
         let params = {
@@ -141,11 +140,12 @@ export default {
           url: res.data.data.filename,
         };
         socket.emit("message", params);
+        loadings.value = false;
         if (type == "image") {
           contentText.value.scrollTo(0, contentText.value.scrollHeight);
           dataList.data.push(params);
         } else {
-          fileList.push(params);
+          fileList.data.unshift(params);
         }
       });
     }
@@ -170,13 +170,13 @@ export default {
         dataList.data = res.data;
         res.data.forEach((item) => {
           if (item.type == "file") {
-            fileList.push(item);
+            fileList.data.push(item);
           }
         });
-
+        fileList.data = fileList.data.reverse();
         setTimeout(() => {
           contentText.value.scrollTo(0, contentText.value.scrollHeight);
-        }, 100);
+        }, 200);
       });
     });
 
@@ -211,28 +211,30 @@ export default {
       filterIconStr,
       fileList,
       serveURL,
+      loadings,
     };
   },
 };
 </script>
 
 <style>
+html,
+body,
+#app {
+  height: 100%;
+}
+
 .board {
   align-items: center;
   background: linear-gradient(to right bottom, lightblue, lightgrey);
 }
 .content-box {
-  height: calc(100% - 100px);
+  height: calc(100% - 96px);
 }
 .content-text {
-  height: calc(100% - 100px);
+  height: calc(100% - 96px);
 }
-/* 设置滚动条的样式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-@media screen and (max-width: 638px) {
+@media screen and (max-width: 640px) {
   .content-box {
     height: calc(100% - 60px);
   }
@@ -252,7 +254,8 @@ a {
   color: #00a4ff;
 }
 *::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 *::-webkit-scrollbar-thumb {
@@ -282,5 +285,19 @@ a {
 *::-webkit-scrollbar-track {
   border-radius: 10px;
   background-color: rgba(255, 255, 255, 0);
+}
+.load {
+  animation: fadenum 5s infinite;
+}
+
+@keyframes fadenum {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+#myuplod {
+  width: 44px;
+  height: 44px;
+  display: block !important;
 }
 </style>
