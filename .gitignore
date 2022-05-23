@@ -2,10 +2,9 @@ node_modules
 .DS_Store
 dist
 dist-ssr
-*.local
+*.loca
 debug.log
 .idea
 *.db
 yarn-error.log
-package-lock.json
-server/assets
+server/assets/*
