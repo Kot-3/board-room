@@ -36,10 +36,7 @@ export default {
     onMounted(() => {
       newType.value = typeList.indexOf(props.type) > -1 ? props.type : "unknown";
     });
-    return {
-      svgs,
-      newType,
-    };
+    return { svgs, newType };
   },
 };
 </script>

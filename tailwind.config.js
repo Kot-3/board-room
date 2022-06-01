@@ -16,4 +16,9 @@ module.exports = {
     require('@tailwindcss/line-clamp'),
     require('@tailwindcss/aspect-ratio'),
   ],
+  purge: [
+    './src/views/Home.vue',
+    './src/components/icons.vue',
+  ],
+
 }

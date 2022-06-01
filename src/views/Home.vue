@@ -29,21 +29,21 @@
                 <span class="text-red-400"> {{ item.name }}::</span>
               </p>
               <span v-if="item.type == 'message'" class="break-all flex-1" v-html="item.msg"></span>
-              <img v-else :src="serveURL + '/' + item.url" class="break-all flex-1" />
+              <img
+                v-else
+                :onload="imgload"
+                :src="serveURL + '/' + item.url"
+                class="break-all flex-1"
+              />
             </li>
           </template>
         </ul>
       </div>
       <div class="footers sm:px-6 pt-2 flex">
-        <div class="bg-gray-300 p-1 rounded-md relative focus:border-blue-500 flex-auto mr-3">
-          <Editor
-            class="weditor"
-            style="overflow-y: hidden"
-            v-model="userMessage"
-            :defaultConfig="editorConfig"
-            :mode="mode"
-            @onCreated="handleCreated"
-          />
+        <div
+          class="bg-gray-300 footers-item p-1 rounded-md relative focus:border-blue-500 flex-auto mr-3"
+        >
+          <div id="editor" />
           <div class="absolute right-0 top-0" style="width: 44px; height: 44px">
             <span
               class="p-2 text-3xl mr-3 flex items-center justify-center"
@@ -61,7 +61,7 @@
             </span>
           </div>
         </div>
-        <button class="bg-gray-300 rounded-xl p-2 w-28 mr-2" @click="sendmsg">Send</button>
+        <button class="bg-gray-300 rounded-xl p-2 w-28 mr-2" @click="sendmsg($event)">Send</button>
       </div>
     </div>
   </div>
@@ -69,21 +69,18 @@
 
 <script>
 import { io } from "socket.io-client";
-import { onMounted, ref, watch, reactive, onBeforeUnmount, shallowRef, nextTick } from "vue";
+import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import { getRecordList, fileUpload, recordRoom } from "../require";
 import { parseTime } from "../utils";
-import "@wangeditor/editor/dist/css/style.css";
-import { Editor } from "@wangeditor/editor-for-vue";
 import icons from "@/components/icons.vue";
 import { userName } from "../assets/userName";
 
 export default {
-  components: { Editor, icons },
+  components: { icons },
   setup() {
     const socket = io(serveURl);
     const contentText = ref(null);
-    const userMessage = ref();
     let dataList = reactive({ data: [] });
     const route = useRoute();
     const loadings = ref(false);
@@ -91,6 +88,12 @@ export default {
     const userNames = userNameList[Math.floor(Math.random() * 300)];
     const fileList = reactive({ data: [] });
     const serveURL = serveURl;
+    const userMessage = ref(null);
+    let editor = "";
+
+    let imgNum = 0;
+    let stepImg = 0;
+
     socket.on("message", function (msg) {
       let params = {
         room: msg.room,
@@ -106,7 +109,7 @@ export default {
         contentText.value?.scrollTo(0, contentText.value.scrollHeight);
       }, 100);
     });
-    function sendmsg() {
+    function sendmsg(e) {
       if (isNull(userMessage.value)) return;
       let params = {
         room: route.params.room,
@@ -118,11 +121,10 @@ export default {
       };
       socket.emit("message", params);
       userMessage.value = "";
+      editor.clear();
       dataList.data.push(params);
-      setTimeout(() => {
-        contentText.value.scrollTo(0, contentText.value.scrollHeight);
-      }, 10);
     }
+
     function sendFile(event) {
       loadings.value = true;
       let file = event.target.files[0];
@@ -164,60 +166,94 @@ export default {
       let newStr = str.split(".");
       return newStr[1] ? newStr[1] : "unknown";
     }
+    function goBottom() {
+      contentText.value.scrollTop = contentText.value.scrollHeight;
+    }
+    function imgload() {
+      stepImg += 1;
+      if (imgNum == stepImg) {
+        goBottom();
+      }
+    }
+
     onMounted(async () => {
+      const { createEditor } = window.wangEditor;
+      const editorConfig = {
+        scroll: true,
+      };
+      editorConfig.onChange = () => {
+        userMessage.value = editor.getHtml();
+      };
+      editor = createEditor({
+        selector: "#editor",
+        mode: "simple",
+        config: editorConfig,
+      });
+      document.querySelector("#editor").addEventListener("paste", function (evt) {
+        const clipboardItems = evt.clipboardData.items;
+        const items = [].slice.call(clipboardItems).filter(function (item) {
+          return item.type.indexOf("image") !== -1;
+        });
+        if (items.length === 0) {
+          return;
+        }
+        const item = items[0];
+        const blob = item.getAsFile();
+        imgNum += 1;
+        new Promise(function (res, rej) {
+          const formData = new FormData();
+          formData.append("file", blob);
+          fileUpload(formData).then((res) => {
+            let params = {
+              room: route.params.room,
+              name: userNames,
+              time: parseTime(Date.now()),
+              msg: "",
+              type: "image",
+              url: res.data.data.filename,
+            };
+            socket.emit("message", params);
+            dataList.data.push(params);
+            
+          });
+        }).then(() => {
+          goBottom();
+        });
+      });
+
       await recordRoom(route.params.room);
+
       getRecordList(route.params.room).then((res) => {
         dataList.data = res.data;
         res.data.forEach((item) => {
+          item.type == "image" ? (imgNum += 1) : "";
           if (item.type == "file") {
             fileList.data.push(item);
           }
         });
+
         fileList.data = fileList.data.reverse();
-        setTimeout(() => {
-          contentText.value.scrollTo(0, contentText.value.scrollHeight);
-        }, 200);
       });
     });
 
-    //富文本编辑器
-    const editorRef = shallowRef();
-    const toolbarConfig = {};
-    const editorConfig = { scroll: "true" };
-
-    // 组件销毁时，也及时销毁编辑器
-    onBeforeUnmount(() => {
-      const editor = editorRef.value;
-      if (editor == null) return;
-      editor.destroy();
-    });
-
-    const handleCreated = (editor) => {
-      editorRef.value = editor; // 记录 editor 实例，重要！
-    };
     return {
       contentText,
       sendmsg,
       route,
       userMessage,
       dataList,
-      //富文本
-      editorRef,
-      mode: "simple", // 或 'simple'
-      toolbarConfig,
-      editorConfig,
-      handleCreated,
       sendFile,
       filterIconStr,
       fileList,
       serveURL,
       loadings,
+      imgload,
     };
   },
 };
 </script>
 
-<style>
+<style lang="postcss">
 html,
 body,
 #app {
@@ -299,5 +335,12 @@ a {
   width: 44px;
   height: 44px;
   display: block !important;
+}
+.footers-item {
+  max-width: calc(100% - 7rem);
+}
+#editor {
+  height: 38px;
+  font-size: 14px;
 }
 </style>

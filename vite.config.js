@@ -2,13 +2,25 @@ import {
   defineConfig
 } from 'vite'
 import vue from '@vitejs/plugin-vue'
+// import visualizer from "rollup-plugin-visualizer";
 import {
   resolve
 } from 'path'
 import requireTransform from 'vite-plugin-require-transform';
+const plugins = [];
+
+
+// 打包依赖展示
+// plugins.push(
+//   visualizer({
+//     open: true,
+//     gzipSize: true,
+//     brotliSize: true,
+//   })
+// );
 
 export default defineConfig({
-  plugins: [vue(), requireTransform({}), ],
+  plugins: [vue(), requireTransform({}), ...plugins, ],
   publicDir: "public",
   base: '/',
   define: {
