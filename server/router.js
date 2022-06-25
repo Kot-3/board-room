@@ -29,6 +29,9 @@ router.get('/getRecord/:room', async (req, res) => {
 
     res.json(record)
 })
+router.post('/deleteMessage', (req, res) => {
+    res.send('ok')
+})
 router.post('/file_upload', upload.single('file'), (req, res) => {
     res.send({
         data: req.file,

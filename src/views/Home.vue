@@ -24,9 +24,16 @@
         <ul ref="contentText" class="content-text px-3 overflow-y-auto py-3">
           <template v-for="item in dataList.data" :key="item.time">
             <li v-if="item.type != 'file'">
-              <p>
+              <p class="relative">
                 <span class="text-green-400 mr-2"> {{ item.time }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
+                <span
+                  @click="delMessage(item)"
+                  v-if="mode == 1"
+                  class="inline-block transform rotate-45 text-lg right-0 absolute cursor-default"
+                  style="top: 0.15rem"
+                  >+</span
+                >
               </p>
               <span v-if="item.type == 'message'" class="break-all flex-1" v-html="item.msg"></span>
               <img
@@ -90,9 +97,9 @@ export default {
     const serveURL = serveURl;
     const userMessage = ref(null);
     let editor = "";
-
     let imgNum = 0;
     let stepImg = 0;
+    let mode = ref(null);
 
     socket.on("message", function (msg) {
       let params = {
@@ -110,6 +117,12 @@ export default {
       }, 100);
     });
     function sendmsg(e) {
+      if (editor.getText() == "admin") {
+        console.log(333);
+        mode.value = 1;
+        editor.clear();
+        return;
+      }
       if (isNull(userMessage.value)) return;
       let params = {
         room: route.params.room,
@@ -123,6 +136,9 @@ export default {
       userMessage.value = "";
       editor.clear();
       dataList.data.push(params);
+      setTimeout(() => {
+        contentText.value.scrollTop = contentText.value.scrollHeight;
+      }, 100);
     }
 
     function sendFile(event) {
@@ -175,8 +191,12 @@ export default {
         goBottom();
       }
     }
+    function delMessage(item) {
+      console.log(item);
+    }
 
     onMounted(async () => {
+      mode.value = 1;
       const { createEditor } = window.wangEditor;
       const editorConfig = {
         scroll: true,
@@ -214,7 +234,6 @@ export default {
             };
             socket.emit("message", params);
             dataList.data.push(params);
-            
           });
         }).then(() => {
           goBottom();
@@ -240,6 +259,7 @@ export default {
       contentText,
       sendmsg,
       route,
+      mode,
       userMessage,
       dataList,
       sendFile,
@@ -248,6 +268,8 @@ export default {
       serveURL,
       loadings,
       imgload,
+
+      delMessage,
     };
   },
 };

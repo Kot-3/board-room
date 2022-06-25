@@ -13,7 +13,7 @@ db.run(`CREATE TABLE IF NOT EXISTS tb_msg (
     room      VARCHAR (32)   NOT NULL,
     uid       VARCHAR (20)    NOT NULL,
     time      INT (10)       NOT NULL,
-    msg       VARCHAR (1000) NOT NULL,
+    msg       VARCHAR (10000) NOT NULL,
     url       VARCHAR (1000) NOT NULL,
     type       VARCHAR (20) NOT NULL
 );`)
