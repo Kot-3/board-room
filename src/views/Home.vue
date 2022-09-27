@@ -22,14 +22,14 @@
           </ul>
         </div>
         <ul ref="contentText" class="content-text px-3 overflow-y-auto py-3">
-          <template v-for="item in dataList.data" :key="item.time">
+          <template v-for="(item, index) in dataList.data" :key="item.time">
             <li v-if="item.type != 'file'">
               <p class="relative">
                 <span class="text-green-400 mr-2"> {{ item.time }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
                 <span
-                  @click="delMessage(item)"
-                  v-if="mode == 1"
+                  @click="delMessage(item, index)"
+                  v-if="isShowdel"
                   class="inline-block transform rotate-45 text-lg right-0 absolute cursor-default"
                   style="top: 0.15rem"
                   >+</span
@@ -78,7 +78,7 @@
 import { io } from "socket.io-client";
 import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
-import { getRecordList, fileUpload, recordRoom } from "../require";
+import { getRecordList, fileUpload, recordRoom, deleteMessage } from "../require";
 import { parseTime } from "../utils";
 import icons from "@/components/icons.vue";
 import { userName } from "../assets/userName";
@@ -96,10 +96,10 @@ export default {
     const fileList = reactive({ data: [] });
     const serveURL = serveURl;
     const userMessage = ref(null);
+    let isShowdel = ref(false);
     let editor = "";
     let imgNum = 0;
     let stepImg = 0;
-    let mode = ref(null);
 
     socket.on("message", function (msg) {
       let params = {
@@ -119,7 +119,7 @@ export default {
     function sendmsg(e) {
       if (editor.getText() == "admin") {
         console.log(333);
-        mode.value = 1;
+        isShowdel.value = true;
         editor.clear();
         return;
       }
@@ -191,12 +191,12 @@ export default {
         goBottom();
       }
     }
-    function delMessage(item) {
-      console.log(item);
+    async function delMessage(item, index) {
+      await deleteMessage(item.id);
+      dataList.data.splice(index, 1);
     }
 
     onMounted(async () => {
-      mode.value = 1;
       const { createEditor } = window.wangEditor;
       const editorConfig = {
         scroll: true,
@@ -259,7 +259,6 @@ export default {
       contentText,
       sendmsg,
       route,
-      mode,
       userMessage,
       dataList,
       sendFile,
@@ -268,8 +267,8 @@ export default {
       serveURL,
       loadings,
       imgload,
-
       delMessage,
+      isShowdel,
     };
   },
 };

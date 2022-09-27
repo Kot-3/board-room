@@ -15,7 +15,8 @@ db.run(`CREATE TABLE IF NOT EXISTS tb_msg (
     time      INT (10)       NOT NULL,
     msg       VARCHAR (10000) NOT NULL,
     url       VARCHAR (1000) NOT NULL,
-    type       VARCHAR (20) NOT NULL
+    type       VARCHAR (20) NOT NULL,
+    show       VARCHAR (20) NOT NULL
 );`)
 
 function getRecord(roomId, limit = 100, offset = 0) {
@@ -36,7 +37,7 @@ function setRecord(msgItem) {
         time,
         msg,
         url,
-        type
+        type,
     } = msgItem
     return new Promise((resolve, reject) => {
         db.run(`INSERT INTO tb_msg(\`name\`, \`room\`, \`uid\`, \`time\`, \`type\`, \`msg\`,\`url\`)
@@ -56,7 +57,18 @@ function setRecord(msgItem) {
     })
 }
 
+function delMsg(id) {
+    return new Promise((resolve, reject) => {
+        db.run(`DELETE FROM tb_msg WHERE id=${id}`, (err, row) => {
+            if (err) reject(err)
+
+            resolve(row)
+        })
+    })
+}
+
 module.exports = {
     getRecord,
-    setRecord
+    setRecord,
+    delMsg
 }

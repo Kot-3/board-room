@@ -26,3 +26,10 @@ export function fileUpload(data) {
         data
     })
 }
+export function deleteMessage(id) {
+    return request({
+        url: `/deleteMessage`,
+        method: 'get',
+        params: id
+    })
+}
