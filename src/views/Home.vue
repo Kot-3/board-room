@@ -9,7 +9,13 @@
       >
         <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
           <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
-            <li class="w-16 mx-2" v-for="item in fileList.data" :key="item.name">
+            <li class="w-16 mx-2 relative" v-for="item in fileList.data" :key="item.name">
+              <span
+                @click="delMessage(item, index, 'file')"
+                v-if="isShowdel"
+                class="inline-block transform rotate-45 text-lg -top-2.5 right-0 absolute cursor-default"
+                >+</span
+              >
               <icons class="m-auto" :type="filterIconStr(item.url)"></icons>
               <a
                 :href="serveURL + '/' + item.url"
@@ -28,7 +34,7 @@
                 <span class="text-green-400 mr-2"> {{ item.time }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
                 <span
-                  @click="delMessage(item, index)"
+                  @click="delMessage(item, index, 'msg')"
                   v-if="isShowdel"
                   class="inline-block transform rotate-45 text-lg right-0 absolute cursor-default"
                   style="top: 0.15rem"
@@ -117,9 +123,12 @@ export default {
       }, 100);
     });
     function sendmsg(e) {
-      if (editor.getText() == "admin") {
-        console.log(333);
+      if (editor.getText() == "/admin") {
         isShowdel.value = true;
+        editor.clear();
+        return;
+      } else if (editor.getText() == "/user") {
+        isShowdel.value = false;
         editor.clear();
         return;
       }
@@ -191,9 +200,13 @@ export default {
         goBottom();
       }
     }
-    async function delMessage(item, index) {
+    async function delMessage(item, index, type) {
       await deleteMessage(item.id);
-      dataList.data.splice(index, 1);
+      if (type == "msg") {
+        dataList.data.splice(index, 1);
+      } else {
+        fileList.data.splice(index, 1);
+      }
     }
 
     onMounted(async () => {
@@ -209,6 +222,12 @@ export default {
         mode: "simple",
         config: editorConfig,
       });
+
+      // console.info();
+      // let contentHeight = document.querySelector(".content-text");
+      // console.log(contentHeight);
+      // contentHeight.scrollTop(contentHeight.clientHeight * 10);
+
       document.querySelector("#editor").addEventListener("paste", function (evt) {
         const clipboardItems = evt.clipboardData.items;
         const items = [].slice.call(clipboardItems).filter(function (item) {
