@@ -9,7 +9,8 @@ const {
     Server
 } = require("socket.io");
 const {
-    setRecord
+    setRecord,
+    getLastRecord
 } =
 require('./db')
 const app = express();
@@ -33,10 +34,14 @@ app.get('/room/recordroom', cors(), (req, res) => {
             io.on("connection", (socket) => {
 
                 socket.join(roomID)
-                socket.on("message", (msg) => {
+                socket.on("message", async (msg) => {
+                    const res = await getLastRecord()
+                    msg.id = Number(res[0].id) + 1
                     socket.to(msg.room).emit("message", msg);
                     msg.uid = socket.id
                     setRecord(msg)
+
+
                 });
                 socket.on('disconnect', () => {
                     socket.leave(roomID)

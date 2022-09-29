@@ -29,7 +29,7 @@
         </div>
         <ul ref="contentText" class="content-text px-3 overflow-y-auto py-3">
           <template v-for="(item, index) in dataList.data" :key="item.time">
-            <li v-if="item.type != 'file'">
+            <li v-if="showYingsi ? true : Boolean(item.show) && item.type != 'file'">
               <p class="relative">
                 <span class="text-green-400 mr-2"> {{ item.time }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
@@ -102,6 +102,7 @@ export default {
     const fileList = reactive({ data: [] });
     const serveURL = serveURl;
     const userMessage = ref(null);
+    let showYingsi = ref(false);
     let isShowdel = ref(false);
     let editor = "";
     let imgNum = 0;
@@ -109,6 +110,7 @@ export default {
 
     socket.on("message", function (msg) {
       let params = {
+        id: msg.id,
         room: msg.room,
         name: msg.name,
         time: msg.time,
@@ -116,6 +118,7 @@ export default {
         type: msg.type,
         url: msg.url || "",
         uid: msg.uid,
+        show: msg.show,
       };
       dataList.data.push(params);
       setTimeout(() => {
@@ -131,6 +134,17 @@ export default {
         isShowdel.value = false;
         editor.clear();
         return;
+      } else if (editor.getText() == "/hide") {
+        dataList.data.forEach((item, index) => {
+          item.show = 1;
+        });
+        showYingsi.value = true;
+        editor.clear();
+        return;
+      } else if (editor.getText() == "/show") {
+        showYingsi.value = false;
+        editor.clear();
+        return;
       }
       if (isNull(userMessage.value)) return;
       let params = {
@@ -140,10 +154,14 @@ export default {
         msg: userMessage.value.trim(),
         type: "message",
         url: "",
+        show: 1,
       };
+      showYingsi.value == true ? (params.show = 0) : (params.show = 1);
+
       socket.emit("message", params);
       userMessage.value = "";
       editor.clear();
+      params.show = 1;
       dataList.data.push(params);
       setTimeout(() => {
         contentText.value.scrollTop = contentText.value.scrollHeight;
@@ -165,6 +183,7 @@ export default {
           msg: userMessage.value.trim(),
           type: type,
           url: res.data.data.filename,
+          show: 1,
         };
         socket.emit("message", params);
         loadings.value = false;
@@ -201,12 +220,12 @@ export default {
       }
     }
     async function delMessage(item, index, type) {
-      await deleteMessage(item.id);
       if (type == "msg") {
         dataList.data.splice(index, 1);
       } else {
         fileList.data.splice(index, 1);
       }
+      await deleteMessage(item.id);
     }
 
     onMounted(async () => {
@@ -288,6 +307,7 @@ export default {
       imgload,
       delMessage,
       isShowdel,
+      showYingsi,
     };
   },
 };

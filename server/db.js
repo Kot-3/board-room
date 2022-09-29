@@ -38,20 +38,32 @@ function setRecord(msgItem) {
         msg,
         url,
         type,
+        show,
     } = msgItem
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO tb_msg(\`name\`, \`room\`, \`uid\`, \`time\`, \`type\`, \`msg\`,\`url\`)
-            VALUES($name, $room, $uid, $time, $type,  $msg, $url);`, {
+        db.run(`INSERT INTO tb_msg(\`name\`, \`room\`, \`uid\`, \`time\`, \`type\`, \`msg\`,\`url\`,\`show\`)
+            VALUES($name, $room, $uid, $time, $type,  $msg, $url, $show);`, {
             $name: name,
             $room: room,
             $uid: uid,
             $time: time,
             $msg: msg,
             $url: url,
-            $type: type
+            $type: type,
+            $show: show
         }, (err, row) => {
             if (err) reject(err)
+            resolve(row)
+        })
+    }).catch(err => {
+        console.log(err);
+    })
+}
 
+function getLastRecord() {
+    return new Promise((resolve, reject) => {
+        db.all(`select * from tb_msg order by id desc limit 0,1`, (err, row) => {
+            if (err) reject(err)
             resolve(row)
         })
     })
@@ -70,5 +82,6 @@ function delMsg(id) {
 module.exports = {
     getRecord,
     setRecord,
-    delMsg
+    delMsg,
+    getLastRecord
 }
