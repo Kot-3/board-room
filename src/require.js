@@ -13,8 +13,9 @@ export function recordRoom(id) {
 }
 export function getRecordList(data) {
     return request({
-        url: `/getRecord/${data}`,
+        url: `/getRecord`,
         method: 'get',
+        params: data
     })
 }
 export function fileUpload(data) {
@@ -28,8 +29,15 @@ export function fileUpload(data) {
 }
 export function deleteMessage(id) {
     return request({
-        url: `/deleteMessage`,
+        url: `/deleteMessage?id=${id}`,
         method: 'get',
-        params: id
+
+    })
+}
+export function getFileList(room) {
+    return request({
+        url: `/getFileList?room=${room}`,
+        method: 'get',
+
     })
 }

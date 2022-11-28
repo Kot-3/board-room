@@ -18,22 +18,34 @@ const upload = multer({
     storage
 })
 
-router.get('/getRecord/:room', async (req, res) => {
+router.get('/getRecord', async (req, res) => {
+    // const {
+    //     room
+    // } = req.params
+    // const {
+    //     limit = 20, page = 0
+    // } = req.query
     const {
-        room
-    } = req.params
-    const {
-        limit = 1000, offset = 0
+        room,
+        limit = 20,
+        page = 1
     } = req.query
-    const record = await db.getRecord(room, limit, offset)
+    const record = await db.getRecord(room, limit, page)
 
     res.json(record)
 })
-router.get('/deleteMessage', (req, res) => {
-    db.delMsg(req.query[0])
-    // req.query[0]
-    // db.delMsg()
-    res.send('OK')
+router.get('/deleteMessage', async (req, res) => {
+
+    const record = await db.delMsg(req.query.id)
+    res.json(record)
+})
+router.get('/getFileList', async (req, res) => {
+    const {
+        room
+    } = req.query
+    const record = await db.getFileList(room)
+    res.json(record)
+
 })
 router.post('/file_upload', upload.single('file'), (req, res) => {
     res.send({

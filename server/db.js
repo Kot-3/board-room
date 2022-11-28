@@ -19,14 +19,22 @@ db.run(`CREATE TABLE IF NOT EXISTS tb_msg (
     show       VARCHAR (20) NOT NULL
 );`)
 
-function getRecord(roomId, limit = 100, offset = 0) {
-    return new Promise((resolve, reject) => {
-        db.all('SELECT * from tb_msg WHERE `room` = ? ORDER BY `time` ASC LIMIT ? OFFSET ?', roomId, limit, offset, (err, row) => {
-            if (err) reject(err)
+// function getRecord(roomId, limit = 100, offset = 0) {
+//     return new Promise((resolve, reject) => {
+//         db.all('SELECT * from tb_msg WHERE `room` = ? ORDER BY `time` ASC LIMIT ? OFFSET ?', roomId, limit, offset, (err, row) => {
+//             if (err) reject(err)
 
+//             resolve(row)
+//         })
+//     })
+// }
+function getRecord(roomId, limit = 20, page = 1) {
+    return new Promise((resolve, reject) => {
+        db.all(`SELECT * FROM tb_msg WHERE room = ?  AND type in ('image','message')  order by id desc LIMIT (? * ?), ?`, roomId, page - 1, limit, limit, (err, row) => {
+            if (err) reject(err)
             resolve(row)
         })
-    })
+    }).catch()
 }
 
 function setRecord(msgItem) {
@@ -60,6 +68,15 @@ function setRecord(msgItem) {
     })
 }
 
+function getFileList(roomId) {
+    return new Promise((resolve, reject) => {
+        db.all(`SELECT *  FROM tb_msg WHERE room = ? AND type in ('file')`, roomId, (err, row) => {
+            if (err) reject(err)
+            resolve(row)
+        })
+    }).catch()
+}
+
 function getLastRecord() {
     return new Promise((resolve, reject) => {
         db.all(`select * from tb_msg order by id desc limit 0,1`, (err, row) => {
@@ -83,5 +100,6 @@ module.exports = {
     getRecord,
     setRecord,
     delMsg,
-    getLastRecord
+    getLastRecord,
+    getFileList
 }

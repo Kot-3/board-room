@@ -9,7 +9,7 @@
       >
         <div class="fileList overflow-auto bg-gray-50 pt-3 pb-1 static sm:rounded-t-lg shadow-md">
           <ul ref="fireDom" class="fileList-ul h-20 flex px-2 overflow-x-auto">
-            <li class="w-16 mx-2 relative" v-for="item in fileList.data" :key="item.name">
+            <li class="w-16 mx-2 relative" v-for="(item, index) in fileList.data" :key="index">
               <span
                 @click="delMessage(item, index, 'file')"
                 v-if="isShowdel"
@@ -22,7 +22,8 @@
                 class="leading-8 truncate text-center"
                 style="display: flow-root"
                 download
-                >{{ item.name }}</a
+              >
+                {{ item.id }}</a
               >
             </li>
           </ul>
@@ -31,7 +32,7 @@
           <template v-for="(item, index) in dataList.data" :key="item.time">
             <li v-if="showYingsi ? true : Boolean(item.show) && item.type != 'file'">
               <p class="relative">
-                <span class="text-green-400 mr-2"> {{ item.time }}</span>
+                <span class="text-green-400 mr-2"> {{ item.time }} {{ item.id }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
                 <span
                   @click="delMessage(item, index, 'msg')"
@@ -82,9 +83,9 @@
 
 <script>
 import { io } from "socket.io-client";
-import { onMounted, ref, reactive } from "vue";
+import { onMounted, ref, reactive, nextTick } from "vue";
 import { useRoute } from "vue-router";
-import { getRecordList, fileUpload, recordRoom, deleteMessage } from "../require";
+import { getRecordList, fileUpload, recordRoom, deleteMessage, getFileList } from "../require";
 import { parseTime } from "../utils";
 import icons from "@/components/icons.vue";
 import { userName } from "../assets/userName";
@@ -107,7 +108,14 @@ export default {
     let editor = "";
     let imgNum = 0;
     let stepImg = 0;
-
+    let isMore = true;
+    let dataloading = false;
+    let recordParams = {
+      room: route.params.room,
+      page: 1,
+      limit: 20,
+    };
+    //监听收到消息
     socket.on("message", function (msg) {
       let params = {
         id: msg.id,
@@ -125,6 +133,7 @@ export default {
         contentText.value?.scrollTo(0, contentText.value.scrollHeight);
       }, 100);
     });
+    //发送消息
     function sendmsg(e) {
       if (editor.getText() == "/admin") {
         isShowdel.value = true;
@@ -147,6 +156,7 @@ export default {
         return;
       }
       if (isNull(userMessage.value)) return;
+
       let params = {
         room: route.params.room,
         name: userNames,
@@ -155,6 +165,7 @@ export default {
         type: "message",
         url: "",
         show: 1,
+        id: "",
       };
       showYingsi.value == true ? (params.show = 0) : (params.show = 1);
 
@@ -167,7 +178,7 @@ export default {
         contentText.value.scrollTop = contentText.value.scrollHeight;
       }, 100);
     }
-
+    //发送文件
     function sendFile(event) {
       loadings.value = true;
       let file = event.target.files[0];
@@ -195,6 +206,7 @@ export default {
         }
       });
     }
+    //判断是否为空
     function isNull(str) {
       let newStr = str
         .replace(/<[^<p>]+>/g, "") // 将所有<p>标签 replace ''
@@ -206,19 +218,25 @@ export default {
       var re = new RegExp(regu);
       return re.test(newStr);
     }
+    //图标
     function filterIconStr(str) {
       let newStr = str.split(".");
       return newStr[1] ? newStr[1] : "unknown";
     }
+    //首次加载取到底部
     function goBottom() {
       contentText.value.scrollTop = contentText.value.scrollHeight;
     }
+    //图片加载
     function imgload() {
       stepImg += 1;
-      if (imgNum == stepImg) {
-        goBottom();
+      if (stepImg == imgNum) {
+        var div = document.querySelector(".content-text");
+        div.scrollTop = div.scrollHeight;
+        init == 1;
       }
     }
+    //删除消息
     async function delMessage(item, index, type) {
       if (type == "msg") {
         dataList.data.splice(index, 1);
@@ -226,6 +244,17 @@ export default {
         fileList.data.splice(index, 1);
       }
       await deleteMessage(item.id);
+    }
+    async function getData() {
+      const res = await getRecordList(recordParams);
+      dataList.data = res.data;
+      dataList.data.forEach((item, index) => {
+        if (item.type == "image") imgNum += 1;
+      });
+    }
+    async function getFileData() {
+      const res = await getFileList(recordParams.room);
+      fileList.data = res.data;
     }
 
     onMounted(async () => {
@@ -241,11 +270,6 @@ export default {
         mode: "simple",
         config: editorConfig,
       });
-
-      // console.info();
-      // let contentHeight = document.querySelector(".content-text");
-      // console.log(contentHeight);
-      // contentHeight.scrollTop(contentHeight.clientHeight * 10);
 
       document.querySelector("#editor").addEventListener("paste", function (evt) {
         const clipboardItems = evt.clipboardData.items;
@@ -279,18 +303,28 @@ export default {
       });
 
       await recordRoom(route.params.room);
+      getFileData();
+      await getData();
 
-      getRecordList(route.params.room).then((res) => {
-        dataList.data = res.data;
-        res.data.forEach((item) => {
-          item.type == "image" ? (imgNum += 1) : "";
-          if (item.type == "file") {
-            fileList.data.push(item);
+      document.querySelector(".content-text").addEventListener("scroll", async function (e) {
+        if (e.target.scrollTop - e.target.clientHeight < 50 && isMore) {
+          recordParams.page = recordParams.page + 1;
+          if (!dataloading) {
+            const res = await getRecordList(recordParams);
+            if (res.data.length < recordParams.limit) {
+              isMore = false;
+            }
+            dataList.data = res.data.concat(dataList.data);
+            dataloading = false;
           }
-        });
-
-        fileList.data = fileList.data.reverse();
+        }
       });
+
+      if (imgNum == 0) {
+        var div = document.querySelector(".content-text");
+        div.scrollTop = div.scrollHeight;
+        init == 1;
+      }
     });
 
     return {

@@ -40,8 +40,6 @@ app.get('/room/recordroom', cors(), (req, res) => {
                     socket.to(msg.room).emit("message", msg);
                     msg.uid = socket.id
                     setRecord(msg)
-
-
                 });
                 socket.on('disconnect', () => {
                     socket.leave(roomID)
