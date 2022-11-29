@@ -6,5 +6,6 @@ dist-ssr
 debug.log
 .idea
 *.db
+msg.db.sqbpro
 yarn-error.log
 server/assets/*
