@@ -23,7 +23,7 @@
                 style="display: flow-root"
                 download
               >
-                {{ item.id }}</a
+                {{ item.name }}</a
               >
             </li>
           </ul>
@@ -32,7 +32,7 @@
           <template v-for="(item, index) in dataList.data" :key="item.time">
             <li v-if="showYingsi ? true : Boolean(item.show) && item.type != 'file'">
               <p class="relative">
-                <span class="text-green-400 mr-2"> {{ item.time }} {{ item.id }}</span>
+                <span class="text-green-400 mr-2"> {{ item.time }}</span>
                 <span class="text-red-400"> {{ item.name }}::</span>
                 <span
                   @click="delMessage(item, index, 'msg')"
@@ -233,7 +233,6 @@ export default {
       if (stepImg == imgNum) {
         var div = document.querySelector(".content-text");
         div.scrollTop = div.scrollHeight;
-        init == 1;
       }
     }
     //删除消息
@@ -247,7 +246,7 @@ export default {
     }
     async function getData() {
       const res = await getRecordList(recordParams);
-      dataList.data = res.data;
+      dataList.data = res.data.reverse();
       dataList.data.forEach((item, index) => {
         if (item.type == "image") imgNum += 1;
       });
@@ -323,7 +322,6 @@ export default {
       if (imgNum == 0) {
         var div = document.querySelector(".content-text");
         div.scrollTop = div.scrollHeight;
-        init == 1;
       }
     });
 
